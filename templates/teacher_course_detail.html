@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.course_name }} - ACME University{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="welcome">Welcome {{ full_name }}!</div>
+    <h1>ACME University</h1>
+    <a href="{{ url_for('logout') }}" class="logout-link">Sign out</a>
+</div>
+
+<div class="content">
+    <a href="{{ url_for('teacher_dashboard') }}" class="back-arrow">←</a>
+
+    <h2 style="margin-bottom: 20px; color: #333;">{{ course.course_name }}</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if students %}
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.student_name }}</td>
+                    <td>
+                        <input type="number"
+                               id="grade-{{ student.enrollment_id }}"
+                               value="{{ student.grade }}"
+                               min="0"
+                               max="100"
+                               step="0.1"
+                               onchange="updateGrade({{ student.enrollment_id }}, this.value)">
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="2" style="text-align: center;">No students enrolled yet</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateGrade(enrollmentId, newGrade) {
+        fetch('/api/update_grade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                enrollment_id: enrollmentId,
+                grade: newGrade
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                //optional: Show success message
+                console.log('Grade updated successfully');
+            } else {
+                alert(data.error);
+                //reload to restore original value
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the grade');
+            location.reload();
+        });
+    }
+</script>
+{% endblock %}
