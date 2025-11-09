@@ -1,51 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard - ACME University</title>
-    <!-- Add your CSS here -->
-</head>
-<body>
-    <header>
-        <p>Welcome {{ full_name }}!</p>
-        <h1>ACME University</h1>
-        <a href="{{ url_for('logout') }}">Sign out</a>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        <h2>Your Courses</h2>
+{% block title %}Teacher Dashboard - ACME University{% endblock %}
 
+{% block content %}
+<div class="header">
+    <div class="welcome">Welcome {{ full_name }}!</div>
+    <h1>ACME University</h1>
+    <a href="{{ url_for('logout') }}" class="logout-link">Sign out</a>
+</div>
+
+<div class="content">
+
+    <div class = "tabs">
+
+        <div class = "course-header" >Your Courses</div>
+    </div>
+
+    <div id="your-courses" class="tab-content"> 
         <table>
             <thead>
                 <tr>
                     <th>Course Name</th>
-                    <th>Teacher</th>
                     <th>Time</th>
-                    <th>Students Enrolled</th>
+                    <th>Student Enrolled</th>
+                    <th>Manage</th>
                 </tr>
+
             </thead>
+
             <tbody>
+
                 {% if courses %}
                     {% for course in courses %}
                     <tr>
                         <td><a href="{{ url_for('teacher_course_detail', course_id=course.id) }}">{{ course.course_name }}</a></td>
-                        <td>{{ course.teacher }}</td>
                         <td>{{ course.time }}</td>
                         <td>{{ course.enrolled }}/{{ course.capacity }}</td>
+
+                        <td style="text-align: center;">
+                            <button class="btn btn-add" onclick="viewCourse({{ course.id }})">View</button>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="4">No courses assigned</td>
+                        <td colspan="4" style="text-align: center;">No courses assigned</td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
 
         {% if courses %}
-        <p>Click on a course name to view enrolled students and manage grades</p>
+        <p class = "course-instructions">Click on a course name or View to see enrolled students and manage grades</p>
         {% endif %}
-    </main>
-</body>
-</html>
+
+    </div>
+
+     <div id="course-details" class="tab-content" style="display: none;">
+        <div id="course-details-inner">
+            <p>Select a course to view its students and edit grades.</p>
+        </div>
+     </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+    function showTab(tabId, event){
+
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.style.display = 'none');
+
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        const panel = document.getElementById(tabId);
+        if (panel) panel.style.display = 'block';
+
+        if (event && event.target) event.target.classList.add('active'); 
+    }
+
+    function viewCourse(courseId){
+        // Navigate to the server-rendered course detail page (server will enforce permissions)
+        window.location.href = '/teacher/course/' + courseId;
+    }
+</script>
+
+{% endblock %}
