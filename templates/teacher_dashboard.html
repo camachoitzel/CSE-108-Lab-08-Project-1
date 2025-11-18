@@ -1,91 +1,65 @@
+{# Extend the base layout so this template reuses shared header/footer/styles #}
 {% extends "base.html" %}
 
-{% block title %}Teacher Dashboard - ACME University{% endblock %}
+{# Set the HTML page title shown in the browser tab #}
+{% block title %}Teacher Dashboard · ACME{% endblock %}
 
+{# Begin the main content block that will be injected into `base.html` #}
 {% block content %}
-<div class="header">
-    <div class="welcome">Welcome {{ full_name }}!</div>
-    <h1>ACME University</h1>
-    <a href="{{ url_for('logout') }}" class="logout-link">Sign out</a>
-</div>
-
-<div class="content">
-
-    <div class = "tabs">
-
-        <div class = "course-header" >Your Courses</div>
+  <!-- Card container for the welcome message -->
+  <div class="card" style="margin-bottom:20px;">
+    <!-- Card header holds the title and a small badge -->
+    <div class="card-header">
+      <!-- Large welcome title that displays the teacher's full name -->
+      <h2 class="card-title">Welcome {{ full_name }}!</h2>
+      <!-- Small badge indicating the current portal (teacher) -->
+      <span class="badge">Teacher Portal</span>
     </div>
+  </div>
 
-    <div id="your-courses" class="tab-content"> 
-        <table>
-            <thead>
-                <tr>
-                    <th>Course Name</th>
-                    <th>Time</th>
-                    <th>Student Enrolled</th>
-                    <th>Manage</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                {% if courses %}
-                    {% for course in courses %}
-                    <tr>
-                        <td><a href="{{ url_for('teacher_course_detail', course_id=course.id) }}">{{ course.course_name }}</a></td>
-                        <td>{{ course.time }}</td>
-                        <td>{{ course.enrolled }}/{{ course.capacity }}</td>
-
-                        <td style="text-align: center;">
-                            <button class="btn btn-add" onclick="viewCourse({{ course.id }})">View</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="4" style="text-align: center;">No courses assigned</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-
-        {% if courses %}
-        <p class = "course-instructions">Click on a course name or View to see enrolled students and manage grades</p>
-        {% endif %}
-
+  <!-- Section showing the list of courses taught by this teacher -->
+  <section class="card">
+    <!-- Header for the courses table -->
+    <div class="card-header"><h3 class="card-title">Your Courses</h3></div>
+    <!-- Wrapper that provides scrolling or layout for the table -->
+    <div class="table-wrap">
+      <!-- Table listing course details -->
+      <table>
+        <thead>
+          <!-- Table column headings: name, time, enrolled count, and actions -->
+          <tr><th>Course Name</th><th>Time</th><th>Student Enrolled</th><th>Manage</th></tr>
+        </thead>
+        <tbody>
+          {# If the `courses` variable (list) exists and is non-empty, render rows #}
+          {% if courses %}
+            {# Loop over each course object in the `courses` list #}
+            {% for course in courses %}
+              <tr>
+                <!-- Course name links to the course detail page for this course -->
+                <td><a href="{{ url_for('teacher_course_detail', course_id=course.id) }}">{{ course.course_name }}</a></td>
+                <!-- Course scheduled time (string) -->
+                <td>{{ course.time }}</td>
+                <!-- Number of students currently enrolled / the course capacity -->
+                <td>
+                  {# If the course object has a pre-computed `enrolled` attribute use it, #}
+                  {# otherwise count the enrollments relationship's length #}
+                  {% if course.enrolled is defined %}{{ course.enrolled }}{% else %}{{ course.enrollments|length }}{% endif %}
+                  <!-- Show capacity after a slash -->
+                  / {{ course.capacity }}
+                </td>
+                <!-- Action column with a centered View button linking to details -->
+                <td style="text-align:center;">
+                  <a class="btn btn-ghost" href="{{ url_for('teacher_course_detail', course_id=course.id) }}">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <!-- Fallback row when no courses are assigned to this teacher -->
+            <tr><td colspan="4" style="text-align:center;">No courses assigned</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
-
-     <div id="course-details" class="tab-content" style="display: none;">
-        <div id="course-details-inner">
-            <p>Select a course to view its students and edit grades.</p>
-        </div>
-     </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-
-    function showTab(tabId, event){
-
-        const contents = document.querySelectorAll('.tab-content');
-        contents.forEach(content => content.style.display = 'none');
-
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => tab.classList.remove('active'));
-
-        const panel = document.getElementById(tabId);
-        if (panel) panel.style.display = 'block';
-
-        if (event && event.target) event.target.classList.add('active'); 
-    }
-
-    function viewCourse(courseId){
-        // Navigate to the server-rendered course detail page (server will enforce permissions)
-        window.location.href = '/teacher/course/' + courseId;
-    }
-</script>
-
+  </section>
+{# End of the content block injected into base template #}
 {% endblock %}
